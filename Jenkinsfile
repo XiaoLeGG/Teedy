@@ -10,7 +10,13 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh "mvn test --fail-never"
+                sh "mvn install --DskipTests"
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test --fail-never'
             }
         }
         
