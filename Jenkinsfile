@@ -2,37 +2,54 @@ pipeline {
     agent any
     
     stages {
-        
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                // 使用 Maven 构建项目
+                sh "mvn clean package"
             }
             post {
-                success {
-                    junit '**/target/surefire-reports/*.xml'
+                artifacts {
                     archiveArtifacts 'target/*.jar'
                 }
             }
         }
         
-        stage('Generate Javadoc') {
+        stage('Doc') {
             steps {
-                // 生成 Javadoc
-                sh 'mvn javadoc:jar'
+                sh "mvn javadoc:jar"
             }
             post {
-                success {
-                    // 将 Javadoc 生成的 jar 文件作为 artifact
-                    archiveArtifacts 'target/*.jar'
+                artifacts {
+                    archiveArtifacts 'target/site/apidocs/**'
                 }
+            }
+        }
+        
+        stage('PMD') {
+            steps {
+                sh "mvn pmd:pmd"
+            }
+            post {
+                artifacts {
+                    archiveArtifacts 'target/site/pmd/*.html'
+                }
+            }
+        }
+        
+        stage('Test Reports') {
+            steps {
+                sh "mvn clean test --fail-never"
+            }
+            post {
+                junit 'target/surefire-reports/*.xml'
             }
         }
     }
     
     post {
         always {
-            // 清理工作目录
-            cleanWs()
+            // 不管构建成功或失败，都保存 Maven 日志为 artifact
+            archiveArtifacts 'target/*.log'
         }
     }
 }
