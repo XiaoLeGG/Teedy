@@ -29,7 +29,7 @@ public class TestAppResource extends BaseJerseyTest {
     public void testAppResource() {
         // Login admin
         String adminToken = clientUtil.login("admin", "admin", false);
-        
+
         // Check the application info
         JsonObject json = target().path("/app").request()
                 .get(JsonObject.class);
@@ -50,13 +50,13 @@ public class TestAppResource extends BaseJerseyTest {
                 .cookie(TokenBasedSecurityFilter.COOKIE_NAME, adminToken)
                 .post(Entity.form(new Form()));
         Assert.assertEquals(Status.OK, Status.fromStatusCode(response.getStatus()));
-        
+
         // Clean storage
         response = target().path("/app/batch/clean_storage").request()
                 .cookie(TokenBasedSecurityFilter.COOKIE_NAME, adminToken)
                 .post(Entity.form(new Form()));
         Assert.assertEquals(Status.OK, Status.fromStatusCode(response.getStatus()));
-        
+
         // Change the default language
         response = target().path("/app/config").request()
                 .cookie(TokenBasedSecurityFilter.COOKIE_NAME, adminToken)
@@ -87,7 +87,7 @@ public class TestAppResource extends BaseJerseyTest {
     public void testLogResource() {
         // Login admin
         String adminToken = clientUtil.login("admin", "admin", false);
-        
+
         // Check the logs (page 1)
         JsonObject json = target().path("/app/log")
                 .queryParam("level", "DEBUG")
@@ -99,7 +99,7 @@ public class TestAppResource extends BaseJerseyTest {
         Long date1 = logs.getJsonObject(0).getJsonNumber("date").longValue();
         Long date2 = logs.getJsonObject(9).getJsonNumber("date").longValue();
         Assert.assertTrue(date1 >= date2);
-        
+
         // Check the logs (page 2)
         json = target().path("/app/log")
                 .queryParam("offset",  "10")
@@ -112,6 +112,20 @@ public class TestAppResource extends BaseJerseyTest {
         Long date3 = logs.getJsonObject(0).getJsonNumber("date").longValue();
         Long date4 = logs.getJsonObject(9).getJsonNumber("date").longValue();
         Assert.assertTrue(date3 >= date4);
+    }
+
+    @Test
+    public void testUnauthenticatedGuestLogin() {
+        // Enable guest login and catch un authenticated exception
+        try {
+            target().path("/app/guest_login").request()
+                    .post(Entity.form(new Form()
+                            .param("enabled", "true")), JsonObject.class);
+            Assert.fail();
+        } catch (Exception e) {
+            // Expected
+        }
+
     }
 
     /**
